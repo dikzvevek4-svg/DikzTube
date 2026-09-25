@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>DikzTube</title>
+
+  <link rel="stylesheet" href="./style.css">
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="logo">
+      <span class="logo-icon">▶</span>
+      <span>Dikz<span>Tube</span></span>
+    </div>
+
+    <div class="search-box">
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Cari video..."
+        autocomplete="off"
+      >
+      <button id="searchBtn">Cari</button>
+    </div>
+  </header>
+
+  <main>
+
+    <section class="hero">
+      <div>
+        <p class="eyebrow">DIKZTUBE</p>
+
+        <h1>Cari. Tonton.<br><span>Nikmati.</span></h1>
+
+        <p class="hero-text">
+          Temukan video favorit kamu dalam satu tempat.
+        </p>
+
+        <button class="hero-button" id="startBtn">
+          Mulai mencari
+        </button>
+      </div>
+    </section>
+
+    <section class="content">
+
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">VIDEO</p>
+          <h2 id="sectionTitle">Video pilihan</h2>
+        </div>
+
+        <div id="status"></div>
+      </div>
+
+      <div id="results" class="video-grid"></div>
+
+    </section>
+
+    <section id="watchPage" class="watch-page hidden">
+
+      <button id="backBtn" class="back-button">
+        ← Kembali
+      </button>
+
+      <div class="player-wrapper">
+        <iframe
+          id="player"
+          src=""
+          title="DikzTube Player"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+      <div class="watch-info">
+        <h2 id="watchTitle"></h2>
+        <p id="watchChannel"></p>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer>
+    <p>© 2026 DikzTube</p>
+  </footer>
+
+  <script src="./script.js"></script>
+
+</body>
+  </html>
