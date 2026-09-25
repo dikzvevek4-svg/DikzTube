@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DikzTube</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="logo">
+        <span class="logo-icon">▶</span>
+        DIKZTUBE
+    </div>
+
+    <div class="search">
+        <input id="searchInput" placeholder="Cari video...">
+        <button id="searchButton">🔍</button>
+    </div>
+
+</header>
+
+
+<main>
+
+    <!-- HOME -->
+    <section id="homePage">
+
+        <div class="hero">
+            <div>
+                <small>DIKZTUBE</small>
+                <h1>Temukan video favoritmu.</h1>
+                <p>Cari dan tonton video langsung dari DikzTube.</p>
+            </div>
+        </div>
+
+        <div id="status" class="status">
+            Cari sesuatu untuk mulai.
+        </div>
+
+        <section id="results" class="video-grid"></section>
+
+    </section>
+
+
+    <!-- WATCH PAGE -->
+    <section id="watchPage" class="watch-page">
+
+        <button id="backButton" class="back-button">
+            ← Kembali
+        </button>
+
+        <div class="watch-layout">
+
+            <!-- PLAYER -->
+            <div class="main-watch">
+
+                <div class="player-container">
+                    <iframe
+                        id="videoPlayer"
+                        src=""
+                        title="DikzTube Player"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+
+                <div class="video-info">
+                    <h1 id="watchTitle"></h1>
+                    <p id="watchChannel"></p>
+                </div>
+
+            </div>
+
+
+            <!-- NEXT VIDEOS -->
+            <aside class="next-section">
+
+                <h2>Video selanjutnya</h2>
+
+                <div id="nextVideos"></div>
+
+            </aside>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="{{ url_for('static', filename='script.js') }}?v=999"></script>
+
+</body>
+</html>
