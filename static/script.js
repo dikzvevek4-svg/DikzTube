@@ -1,303 +1,272 @@
-// ==========================================
-// DIKZTUBE - GITHUB PAGES
-// ==========================================
-
-// MASUKKAN API KEY YOUTUBE KHUSUS DI SINI
-const API_KEY = "AIzaSyCOybJW58nNIFZatWtoHYZ9hZJTAlmLr9w";
-
-const API_URL =
-  "https://www.googleapis.com/youtube/v3/search";
-
 const searchInput = document.getElementById("searchInput");
-const searchBtn = document.getElementById("searchBtn");
-const startBtn = document.getElementById("startBtn");
+const searchButton = document.getElementById("searchButton");
 
 const results = document.getElementById("results");
-const statusBox = document.getElementById("status");
-const sectionTitle = document.getElementById("sectionTitle");
+const status = document.getElementById("status");
 
+const homePage = document.getElementById("homePage");
 const watchPage = document.getElementById("watchPage");
-const player = document.getElementById("player");
+
+const videoPlayer = document.getElementById("videoPlayer");
 const watchTitle = document.getElementById("watchTitle");
 const watchChannel = document.getElementById("watchChannel");
-const backBtn = document.getElementById("backBtn");
+
+const nextVideos = document.getElementById("nextVideos");
+const backButton = document.getElementById("backButton");
+
+let currentVideos = [];
+let currentIndex = -1;
 
 
-// ==========================================
-// HELPERS
-// ==========================================
-
-function escapeHTML(value) {
-  const div = document.createElement("div");
-  div.textContent = value || "";
-  return div.innerHTML;
-}
-
-
-function setStatus(text, isError = false) {
-  statusBox.textContent = text;
-  statusBox.className = isError ? "error" : "";
-}
-
-
-// ==========================================
-// SEARCH YOUTUBE
-// ==========================================
+// ===============================
+// SEARCH
+// ===============================
 
 async function searchVideos() {
 
-  const query = searchInput.value.trim();
+    const query = searchInput.value.trim();
 
-  if (!query) {
-    setStatus("Masukkan kata pencarian.");
-    return;
-  }
+    if (!query) {
+        status.textContent = "Masukkan kata pencarian.";
+        return;
+    }
 
-  if (
-    !API_KEY ||
-    API_KEY === "MASUKKAN_API_KEY_DI_SINI"
-  ) {
-    setStatus("API key belum dipasang.", true);
-    return;
-  }
+    // tampilkan home
+    watchPage.style.display = "none";
+    homePage.style.display = "block";
 
-  setStatus("Mencari...");
+    // matikan player
+    videoPlayer.src = "";
 
-  results.innerHTML = `
-    <div class="empty">
-      Sedang mencari video...
-    </div>
-  `;
+    // bersihkan hasil lama
+    results.innerHTML = "";
+    nextVideos.innerHTML = "";
 
-  try {
+    currentVideos = [];
+    currentIndex = -1;
 
-    const params = new URLSearchParams({
-      part: "snippet",
-      q: query,
-      type: "video",
-      maxResults: "24",
-      key: API_KEY
+    status.textContent = `Mencari "${query}"...`;
+
+    searchButton.disabled = true;
+    searchButton.textContent = "⏳";
+
+    try {
+
+        const response = await fetch(
+            `/api/search?q=${encodeURIComponent(query)}&_=${Date.now()}`,
+            {
+                method: "GET",
+                cache: "no-store"
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(
+                data.message || "Pencarian gagal."
+            );
+        }
+
+        currentVideos = data.videos || [];
+
+        if (currentVideos.length === 0) {
+
+            status.textContent =
+                `Video "${query}" tidak ditemukan.`;
+
+            return;
+        }
+
+        status.textContent =
+            `${currentVideos.length} video ditemukan`;
+
+        renderResults();
+
+    } catch (error) {
+
+        console.error("SEARCH ERROR:", error);
+
+        status.textContent =
+            "Pencarian gagal. Coba lagi.";
+
+    } finally {
+
+        searchButton.disabled = false;
+        searchButton.textContent = "🔍";
+
+    }
+}
+
+
+// ===============================
+// HASIL
+// ===============================
+
+function renderResults() {
+
+    results.innerHTML = "";
+
+    currentVideos.forEach((video, index) => {
+
+        const card = document.createElement("article");
+
+        card.className = "video-card";
+
+        card.innerHTML = `
+            <div class="thumbnail">
+
+                <img
+                    src="${escapeHTML(video.thumbnail)}"
+                    alt=""
+                    loading="lazy"
+                >
+
+                <div class="play-button">
+                    ▶
+                </div>
+
+            </div>
+
+            <div class="video-text">
+
+                <h3>
+                    ${escapeHTML(video.title)}
+                </h3>
+
+                <p>
+                    ${escapeHTML(video.channel)}
+                </p>
+
+            </div>
+        `;
+
+        card.onclick = function () {
+            openVideo(video, index);
+        };
+
+        results.appendChild(card);
+
     });
-
-    const response = await fetch(
-      `${API_URL}?${params.toString()}`
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-
-      console.error(data);
-
-      throw new Error(
-        data?.error?.message ||
-        "Gagal mengambil data YouTube."
-      );
-    }
-
-    if (!data.items || data.items.length === 0) {
-
-      results.innerHTML = `
-        <div class="empty">
-          Video tidak ditemukan.
-        </div>
-      `;
-
-      setStatus("");
-      return;
-    }
-
-    renderVideos(data.items);
-
-    sectionTitle.textContent =
-      `Hasil: ${query}`;
-
-    setStatus(
-      `${data.items.length} video ditemukan`
-    );
-
-  } catch (error) {
-
-    console.error(error);
-
-    results.innerHTML = `
-      <div class="empty error">
-        ${escapeHTML(error.message)}
-      </div>
-    `;
-
-    setStatus("Terjadi kesalahan.", true);
-  }
 }
 
 
-// ==========================================
-// RENDER VIDEO
-// ==========================================
-
-function renderVideos(items) {
-
-  results.innerHTML = "";
-
-  items.forEach(item => {
-
-    const videoId =
-      item?.id?.videoId;
-
-    if (!videoId) return;
-
-    const snippet =
-      item.snippet || {};
-
-    const title =
-      snippet.title || "Tanpa judul";
-
-    const channel =
-      snippet.channelTitle || "Unknown";
-
-    const thumbnail =
-      snippet?.thumbnails?.high?.url ||
-      snippet?.thumbnails?.medium?.url ||
-      snippet?.thumbnails?.default?.url ||
-      "";
-
-    const card =
-      document.createElement("article");
-
-    card.className = "video-card";
-
-    card.innerHTML = `
-      <div class="thumbnail">
-
-        <img
-          src="${escapeHTML(thumbnail)}"
-          alt="${escapeHTML(title)}"
-          loading="lazy"
-        >
-
-        <div class="play-icon">
-          ▶
-        </div>
-
-      </div>
-
-      <div class="video-info">
-
-        <div class="video-title">
-          ${escapeHTML(title)}
-        </div>
-
-        <div class="video-channel">
-          ${escapeHTML(channel)}
-        </div>
-
-      </div>
-    `;
-
-    card.addEventListener(
-      "click",
-      () => openVideo(
-        videoId,
-        title,
-        channel
-      )
-    );
-
-    results.appendChild(card);
-  });
-}
-
-
-// ==========================================
+// ===============================
 // OPEN VIDEO
-// ==========================================
+// ===============================
 
-function openVideo(
-  videoId,
-  title,
-  channel
-) {
+function openVideo(video, index) {
 
-  if (!videoId) return;
+    currentIndex = index;
 
-  watchPage.classList.remove("hidden");
+    homePage.style.display = "none";
+    watchPage.style.display = "block";
 
-  document
-    .querySelector("main")
-    .scrollIntoView({
-      behavior: "smooth",
-      block: "start"
+    watchTitle.textContent = video.title;
+    watchChannel.textContent = video.channel;
+
+    videoPlayer.src =
+        `https://www.youtube.com/embed/${video.id}?autoplay=1&rel=0`;
+
+    renderNextVideos();
+
+    window.scrollTo(0, 0);
+}
+
+
+// ===============================
+// NEXT VIDEO
+// ===============================
+
+function renderNextVideos() {
+
+    nextVideos.innerHTML = "";
+
+    currentVideos.forEach((video, index) => {
+
+        if (index === currentIndex) {
+            return;
+        }
+
+        const item = document.createElement("div");
+
+        item.className = "next-video";
+
+        item.innerHTML = `
+            <img
+                src="${escapeHTML(video.thumbnail)}"
+                alt=""
+                loading="lazy"
+            >
+
+            <div>
+
+                <h3>
+                    ${escapeHTML(video.title)}
+                </h3>
+
+                <p>
+                    ${escapeHTML(video.channel)}
+                </p>
+
+            </div>
+        `;
+
+        item.onclick = function () {
+            openVideo(video, index);
+        };
+
+        nextVideos.appendChild(item);
+
     });
 
-  player.src =
-    "https://www.youtube.com/embed/" +
-    encodeURIComponent(videoId) +
-    "?autoplay=1&rel=0";
-
-  watchTitle.textContent =
-    title || "Video";
-
-  watchChannel.textContent =
-    channel || "";
-
-  window.scrollTo({
-    top: watchPage.offsetTop - 20,
-    behavior: "smooth"
-  });
 }
 
 
-// ==========================================
-// CLOSE PLAYER
-// ==========================================
+// ===============================
+// BACK
+// ===============================
 
-function closePlayer() {
+function closeVideo() {
 
-  player.src = "";
+    videoPlayer.src = "";
 
-  watchPage.classList.add("hidden");
+    watchPage.style.display = "none";
+    homePage.style.display = "block";
+
 }
 
 
-// ==========================================
+// ===============================
+// ESCAPE HTML
+// ===============================
+
+function escapeHTML(text) {
+
+    const div = document.createElement("div");
+
+    div.textContent = text || "";
+
+    return div.innerHTML;
+}
+
+
+// ===============================
 // EVENTS
-// ==========================================
+// ===============================
 
-searchBtn.addEventListener(
-  "click",
-  searchVideos
-);
+searchButton.onclick = searchVideos;
 
-startBtn.addEventListener(
-  "click",
-  () => {
-    searchInput.focus();
-  }
-);
-
-backBtn.addEventListener(
-  "click",
-  closePlayer
-);
-
-searchInput.addEventListener(
-  "keydown",
-  event => {
+searchInput.onkeydown = function (event) {
 
     if (event.key === "Enter") {
-      searchVideos();
+
+        event.preventDefault();
+
+        searchVideos();
+
     }
 
-  }
-);
+};
 
-
-// ==========================================
-// INITIAL STATE
-// ==========================================
-
-results.innerHTML = `
-  <div class="empty">
-    Ketik sesuatu di kolom pencarian untuk mulai.
-  </div>
-`;
+backButton.onclick = closeVideo;
